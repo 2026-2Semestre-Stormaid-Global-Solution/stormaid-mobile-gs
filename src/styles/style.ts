@@ -3,7 +3,7 @@ import { ThemeColorsType } from "../types/ThemeColorsType";
 export const LIGHT_THEME: ThemeColorsType = {
   background: "#F5F7FB",
   surface: "#FFFFFF",
-  titleLogo: "#8EA6FF",
+  titleLogo: "#2F4BD0",
   text: "#0E1630",
   textSecondary: "#46526E",
   primary: "#304CD7",
@@ -39,3 +39,12 @@ export const DARK_THEME: ThemeColorsType = {
   buttonDisabled: "#2F4BD030",
   textDisabled: "#0A0F2430",
 };
+
+export const FONTS = {
+    inter: {
+        400: "Inter-Regular",
+        500: "Inter-Medium",
+        600: "Inter-SemiBold",
+        700: "Inter-Bold",
+    },
+}
