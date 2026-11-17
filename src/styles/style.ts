@@ -18,6 +18,7 @@ export const LIGHT_THEME: ThemeColorsType = {
   backgroundError: "#FDE7E7",
   buttonDisabled: "#2F4BD030",
   textDisabled: "#FFFFFF30",
+  icon: "#0E1630",
 };
 
 export const DARK_THEME: ThemeColorsType = {
@@ -38,6 +39,7 @@ export const DARK_THEME: ThemeColorsType = {
   backgroundError: "#3B1F2D",
   buttonDisabled: "#2F4BD030",
   textDisabled: "#0A0F2430",
+  icon: "#91A6FF",
 };
 
 export const FONTS = {
