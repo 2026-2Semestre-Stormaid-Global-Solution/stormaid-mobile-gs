@@ -55,4 +55,11 @@ export const FONTS = {
         600: "Inter-SemiBold",
         700: "Inter-Bold",
     },
+
+    sora: {
+        400: "Sora-Regular",
+        500: "Sora-Medium",
+        600: "Sora-SemiBold",
+        700: "Sora-Bold",
+    },
 }
