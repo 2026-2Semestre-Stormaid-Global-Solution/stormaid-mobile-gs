@@ -1,5 +1,6 @@
 import * as SecureStore from "expo-secure-store";
 import { RegisterRequestType, RegisterResponseType, RegisterResultType} from "../types/RegisterRequestType";
+import { AddressDataType } from "../types/AddressDataType";
 
 const API_URL = process.env.EXPO_PUBLIC_API_URL;
 const REGISTER_DRAFT_KEY = "stormaid_registration_draft_v1";
@@ -83,4 +84,40 @@ export async function registerAccount(): Promise<RegisterResultType> {
     user,
     draftCleared,
   };
+}
+
+export async function saveAddressData(
+  address: AddressDataType
+): Promise<void> {
+  const storedData = await SecureStore.getItemAsync(
+    REGISTER_DRAFT_KEY
+  );
+
+  if (!storedData) {
+    throw new Error("Preencha seus dados pessoais primeiro.");
+  }
+
+  const draft = JSON.parse(storedData);
+
+  await SecureStore.setItemAsync(
+    REGISTER_DRAFT_KEY,
+    JSON.stringify({
+      ...draft,
+      address,
+    })
+  );
+}
+
+export async function getAddressData(): Promise<AddressDataType | null> {
+  const storedData = await SecureStore.getItemAsync(
+    REGISTER_DRAFT_KEY
+  );
+
+  if (!storedData) {
+    return null;
+  }
+
+  const draft = JSON.parse(storedData);
+
+  return draft.address ?? null;
 }
