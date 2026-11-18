@@ -5,7 +5,7 @@ import FormLogin from "../../components/FormLogin";
 
 export default function LoginScreen() {
   return (
-    <LayoutWrapper>
+    <LayoutWrapper justifyContent="center">
       <View
         style={{
           alignItems: "flex-end",
