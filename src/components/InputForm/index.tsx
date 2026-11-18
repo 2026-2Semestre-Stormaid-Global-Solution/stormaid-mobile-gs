@@ -21,7 +21,7 @@ export default function InputForm({
     >
       <Text
         style={{
-          color: colors.text,
+          color: colors.label,
           fontFamily: FONTS.inter[600],
           fontSize: 20,
         }}
