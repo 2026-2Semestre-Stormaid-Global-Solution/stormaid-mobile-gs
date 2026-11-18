@@ -18,4 +18,6 @@ export type ThemeColorsType = {
   textButton: string;
   textDisabled: string;
   icon: string;
+  iconArrowLeft: string;
+  label: string;
 };
