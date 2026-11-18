@@ -15,6 +15,7 @@ export type ThemeColorsType = {
   messageError: string;
   backgroundError: string;
   buttonDisabled: string;
+  textButton: string;
   textDisabled: string;
   icon: string;
 };
