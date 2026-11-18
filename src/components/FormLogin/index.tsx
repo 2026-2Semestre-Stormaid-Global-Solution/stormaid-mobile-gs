@@ -1,3 +1,4 @@
+
 import { Text, View } from "react-native";
 import { useState } from "react";
 import { FONTS } from "../../styles/style";
@@ -12,7 +13,8 @@ import { LoginErrorType } from "../../types/LoginErrorType";
 
 export default function FormLogin() {
   const { colors } = useTheme();
-  const { signIn } = useAuth();
+  const { signIn, signInWithBiometrics } = useAuth();
+  const [biometricError, setBiometricError] = useState<string | null>(null);
   const [email, setEmail] = useState("");
   const [password, setPassword] = useState("");
   const [passwordVisible, setPasswordVisible] = useState(false);
@@ -68,6 +70,27 @@ export default function FormLogin() {
     }
   }
 
+  async function handleBiometricLogin() {
+    if (loading) {
+      return;
+    }
+
+    try {
+      setBiometricError(null);
+      setLoading(true);
+
+      await signInWithBiometrics();
+    } catch (error) {
+      setBiometricError(
+        error instanceof Error
+          ? error.message
+          : "Não foi possível realizar a autenticação biométrica."
+      );
+    } finally {
+      setLoading(false);
+    }
+  }
+
   async function handleLogin() {
     if (buttonDisabled) {
       return;
@@ -82,6 +105,7 @@ export default function FormLogin() {
 
     try {
       setLoading(true);
+      setBiometricError(null);
 
       await signIn(normalizedEmail, password);
     } catch (error) {
@@ -240,30 +264,57 @@ export default function FormLogin() {
             disabled={buttonDisabled}
             text={loading ? "Entrando..." : "Entrar"}
             backgroundColor={
-              buttonDisabled ? colors.buttonDisabled : colors.primary
+              buttonDisabled
+                ? colors.buttonDisabled
+                : colors.primary
             }
             colorText={
-              buttonDisabled ? colors.textSecondary : colors.textButton
+              buttonDisabled
+                ? colors.textSecondary
+                : colors.textButton
             }
           />
         </View>
 
-        <Button
-          disabled={true}
-          text="Entrar com biometria"
-          colorText={colors.primary}
-          borderWidth={1.5}
-          borderColor={colors.primary}
-          backgroundColor="transparent"
-          fontSize={20}
-          iconLeft={
-            <Ionicons
-              name="finger-print-outline"
-              size={24}
-              color={colors.primary}
-            />
-          }
-        />
+        <View
+          style={{
+            alignItems: "center",
+            gap: 10,
+          }}
+        >
+          <Button
+            onPress={handleBiometricLogin}
+            disabled={loading}
+            text="Entrar com biometria"
+            colorText={colors.primary}
+            borderWidth={1.5}
+            borderColor={colors.primary}
+            backgroundColor="transparent"
+            fontSize={20}
+            iconLeft={
+              <Ionicons
+                name="finger-print-outline"
+                size={24}
+                color={colors.primary}
+              />
+            }
+          />
+
+          {biometricError && (
+            <Text
+              accessibilityRole="alert"
+              style={{
+                color: colors.messageError,
+                fontFamily: FONTS.inter[500],
+                fontSize: 13,
+                textAlign: "center",
+                maxWidth: 300,
+              }}
+            >
+              {biometricError}
+            </Text>
+          )}
+        </View>
 
         <View
           style={{
