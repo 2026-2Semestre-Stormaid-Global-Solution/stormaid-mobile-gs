@@ -14,7 +14,34 @@ export type LoginResponse = {
   user: AuthUser;
 };
 
+export type ResponderProfileResponse = {
+  verificationStatus: "PENDING" | "APPROVED" | "SUSPENDED";
+};
+
 const API_URL = process.env.EXPO_PUBLIC_API_URL;
+
+export async function getResponderProfile(accessToken: string): Promise<ResponderProfileResponse> {
+  if (!API_URL) {
+    throw new Error("URL da API Java não configurada.");
+  }
+
+  const response = await fetch(
+    `${API_URL}/api/v1/responders/me/profile`,
+    {
+      headers: {
+        Authorization: `Bearer ${accessToken}`,
+      },
+    }
+  );
+
+  if (!response.ok) {
+    throw new Error(
+      "Não foi possível validar o cadastro institucional."
+    );
+  }
+
+  return (await response.json()) as ResponderProfileResponse;
+}
 
 export async function loginWithEmail(
   email: string,
