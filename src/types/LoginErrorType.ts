@@ -1,4 +1,4 @@
 export type LoginErrorType = {
   message: string;
-  type: "credentials" | "general";
+  type: "credentials" | "general" | "email";
 };
