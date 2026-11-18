@@ -1,20 +1,87 @@
 import { Text, View } from "react-native";
+import { useState } from "react";
 import { FONTS } from "../../styles/style";
 import { useTheme } from "../../context/ThemeContext";
+import { useAuth } from "../../context/AuthContext";
 import InputForm from "../InputForm";
-import FontAwesome5 from "@expo/vector-icons/FontAwesome5";
-import { useState } from "react";
 import TextLink from "../TextLink";
 import Button from "../Button";
-import { useNavigation } from "@react-navigation/native";
-import { NativeStackNavigationProp } from "@react-navigation/native-stack";
-import { RootStackParamListType } from "../../types/RootStackParamListType";
-import Ionicons from '@expo/vector-icons/Ionicons';
+import FontAwesome5 from "@expo/vector-icons/FontAwesome5";
+import Ionicons from "@expo/vector-icons/Ionicons";
+import { LoginErrorType } from "../../types/LoginErrorType";
 
 export default function FormLogin() {
   const { colors } = useTheme();
+  const { signIn } = useAuth();
+  const [email, setEmail] = useState("");
+  const [password, setPassword] = useState("");
   const [passwordVisible, setPasswordVisible] = useState(false);
-  const navigation = useNavigation<NativeStackNavigationProp<RootStackParamListType>>();
+  const [loading, setLoading] = useState(false);
+  const [validationAttempted, setValidationAttempted] = useState(false);
+  const [loginError, setLoginError] = useState<LoginErrorType | null>(null);
+
+  const normalizedEmail = email.trim().toLowerCase();
+  const emailIsValid = /^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(normalizedEmail);
+  const passwordIsValid = password.length > 0;
+
+  const emailHasError = (validationAttempted && !emailIsValid) || loginError?.type === "credentials";
+
+  const passwordHasError = (validationAttempted && !passwordIsValid) || loginError?.type === "credentials";
+
+  const emailErrorMessage = validationAttempted && !emailIsValid ? "Informe um e-mail válido." : null;
+
+  const passwordErrorMessage = validationAttempted && !passwordIsValid
+      ? "Informe sua senha."
+      : (loginError?.message ?? null);
+
+  const buttonDisabled =
+    loading || (validationAttempted && (!emailIsValid || !passwordIsValid)) || loginError !== null;
+
+  function handleEmailChange(value: string) {
+    setEmail(value.toLowerCase());
+
+    if (loginError) {
+      setLoginError(null);
+    }
+  }
+
+  function handlePasswordChange(value: string) {
+    setPassword(value);
+
+    if (loginError) {
+      setLoginError(null);
+    }
+  }
+
+  async function handleLogin() {
+    if (buttonDisabled) {
+      return;
+    }
+
+    setValidationAttempted(true);
+    setLoginError(null);
+
+    if (!emailIsValid || !passwordIsValid) {
+      return;
+    }
+
+    try {
+      setLoading(true);
+
+      await signIn(normalizedEmail, password);
+    } catch (error) {
+      const message = error instanceof Error ? error.message : "Não foi possível realizar o login.";
+
+      const credentialsInvalid = message === "E-mail ou senha inválidos.";
+
+      setLoginError({
+        message,
+        type: credentialsInvalid ? "credentials" : "general",
+      });
+    } finally {
+      setLoading(false);
+    }
+  }
 
   return (
     <View
@@ -42,57 +109,148 @@ export default function FormLogin() {
             gap: 30,
           }}
         >
-          <InputForm label="E-mail" placeholder="exemplo@email.com" />
-          <InputForm
-            label="Senha"
-            placeholder="Digite sua senha"
-            isIcon={
-              <FontAwesome5
-                name={passwordVisible ? "eye-slash" : "eye"}
-                size={22}
-                color={colors.icon}
-              />
-            }
-            onPress={() => setPasswordVisible(!passwordVisible)}
-            secureTextEntry={!passwordVisible}
-          />
+          <View
+            style={{
+              gap: 5,
+            }}
+          >
+            <InputForm
+              label="E-mail"
+              placeholder="exemplo@email.com"
+              keyboardType="email-address"
+              autoCapitalize="none"
+              autoCorrect={false}
+              autoComplete="email"
+              textContentType="emailAddress"
+              value={email}
+              onChangeText={handleEmailChange}
+              error={emailHasError}
+              editable={!loading}
+            />
+
+            {emailErrorMessage && (
+              <Text
+                accessibilityRole="alert"
+                style={{
+                  color: colors.messageError,
+                  fontFamily: FONTS.inter[500],
+                  fontSize: 13,
+                }}
+              >
+                {emailErrorMessage}
+              </Text>
+            )}
+          </View>
+
+          <View
+            style={{
+              gap: 5,
+            }}
+          >
+            <InputForm
+              label="Senha"
+              placeholder="Digite sua senha"
+              value={password}
+              onChangeText={handlePasswordChange}
+              autoCapitalize="none"
+              autoCorrect={false}
+              secureTextEntry={!passwordVisible}
+              autoComplete="current-password"
+              textContentType="password"
+              error={passwordHasError}
+              editable={!loading}
+              isIcon={
+                <FontAwesome5
+                  name={passwordVisible ? "eye-slash" : "eye"}
+                  size={22}
+                  color={
+                    passwordHasError ? colors.inputBorderError : colors.icon
+                  }
+                />
+              }
+              onPress={() => setPasswordVisible(!passwordVisible)}
+            />
+
+            {passwordErrorMessage && (
+              <Text
+                accessibilityRole="alert"
+                style={{
+                  color: colors.messageError,
+                  fontFamily: FONTS.inter[500],
+                  fontSize: 13,
+                }}
+              >
+                {passwordErrorMessage}
+              </Text>
+            )}
+          </View>
         </View>
+
         <TextLink route="Login" text="Esqueci minha senha" textAlign="end" />
       </View>
 
       <View
         style={{
-            alignItems: 'center',
-            gap: 30,
+          alignItems: "center",
+          gap: 30,
         }}
       >
-          <Button 
-            onPress={() => navigation.navigate("Login")}
-            text="Entrar"
-          />
-
-          <Button 
-            onPress={() => navigation.navigate("Login")}
-            text="Entrar com biometria"
-            colorText={colors.primary}
-            borderWidth={1.5}
-            borderColor={colors.primary}
-            backgroundColor="transparent"
-            fontSize={20}
-            iconLeft={
-                <Ionicons name="finger-print-outline" size={24} color={colors.primary} />
+        <View
+          style={{
+            alignItems: "center",
+            gap: 10,
+          }}
+        >
+          <Button
+            onPress={handleLogin}
+            disabled={buttonDisabled}
+            text={loading ? "Entrando..." : "Entrar"}
+            backgroundColor={
+              buttonDisabled ? colors.buttonDisabled : colors.primary
+            }
+            colorText={
+              buttonDisabled ? colors.textSecondary : colors.textButton
             }
           />
+        </View>
 
+        <Button
+          disabled={true}
+          text="Entrar com biometria"
+          colorText={colors.primary}
+          borderWidth={1.5}
+          borderColor={colors.primary}
+          backgroundColor="transparent"
+          fontSize={20}
+          iconLeft={
+            <Ionicons
+              name="finger-print-outline"
+              size={24}
+              color={colors.primary}
+            />
+          }
+        />
+
+        <View
+          style={{
+            flexDirection: "row",
+            alignItems: "center",
+            justifyContent: "center",
+            flexWrap: "wrap",
+          }}
+        >
           <Text
             style={{
-                fontSize: 15,
-                fontFamily: FONTS.inter[400]
+              color: colors.text,
+              fontSize: 15,
+              fontFamily: FONTS.inter[400],
             }}
           >
             Ainda não tem conta?
-            <TextLink text=" Criar conta" route="Login"/> 
           </Text>
+
+          <TextLink text=" Criar conta" route="Login" />
+        </View>
       </View>
     </View>
   );
