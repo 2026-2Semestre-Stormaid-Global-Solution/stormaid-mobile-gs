@@ -9,6 +9,9 @@ export default function InputForm({
   error = false,
   isIcon,
   onPress,
+  fontSizeLabel,
+  color,
+  gap,
   ...rest
 }: InputFormType) {
   const { colors } = useTheme();
@@ -16,14 +19,14 @@ export default function InputForm({
   return (
     <View
       style={{
-        gap: 5,
+        gap: gap || 5,
       }}
     >
       <Text
         style={{
-          color: colors.label,
+          color: color || colors.label,
           fontFamily: FONTS.inter[600],
-          fontSize: 20,
+          fontSize: fontSizeLabel || 20,
         }}
       >
         {label}
