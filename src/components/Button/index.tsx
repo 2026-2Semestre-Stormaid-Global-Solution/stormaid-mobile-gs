@@ -16,6 +16,8 @@ export default function Button({
   iconLeft,
   gap,
   text,
+  borderWidth,
+  borderColor,
   ...rest
 }: ButtonType) {
 
@@ -29,6 +31,8 @@ export default function Button({
         width: width || 300,
         backgroundColor: backgroundColor || colors.primary,
         borderRadius: borderRadius || 12,
+        borderWidth: borderWidth,
+        borderColor: borderColor,
         gap: gap || 15,
         flexDirection: 'row',
         alignItems: 'center',
