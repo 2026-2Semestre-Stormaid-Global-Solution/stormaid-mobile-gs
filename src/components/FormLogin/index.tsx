@@ -24,18 +24,33 @@ export default function FormLogin() {
   const emailIsValid = /^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(normalizedEmail);
   const passwordIsValid = password.length > 0;
 
-  const emailHasError = (validationAttempted && !emailIsValid) || loginError?.type === "credentials";
+  const emailHasError =
+    (validationAttempted && !emailIsValid) ||
+    loginError?.type === "credentials" ||
+    loginError?.type === "email";
 
-  const passwordHasError = (validationAttempted && !passwordIsValid) || loginError?.type === "credentials";
+  const passwordHasError =
+    (validationAttempted && !passwordIsValid) ||
+    loginError?.type === "credentials";
 
-  const emailErrorMessage = validationAttempted && !emailIsValid ? "Informe um e-mail válido." : null;
+  const emailErrorMessage =
+    validationAttempted && !emailIsValid
+      ? "Informe um e-mail válido."
+      : loginError?.type === "email"
+        ? loginError.message
+        : null;
 
-  const passwordErrorMessage = validationAttempted && !passwordIsValid
+  const passwordErrorMessage =
+    validationAttempted && !passwordIsValid
       ? "Informe sua senha."
-      : (loginError?.message ?? null);
+      : loginError?.type === "email"
+        ? null
+        : (loginError?.message ?? null);
 
   const buttonDisabled =
-    loading || (validationAttempted && (!emailIsValid || !passwordIsValid)) || loginError !== null;
+    loading ||
+    (validationAttempted && (!emailIsValid || !passwordIsValid)) ||
+    loginError !== null;
 
   function handleEmailChange(value: string) {
     setEmail(value.toLowerCase());
@@ -70,13 +85,26 @@ export default function FormLogin() {
 
       await signIn(normalizedEmail, password);
     } catch (error) {
-      const message = error instanceof Error ? error.message : "Não foi possível realizar o login.";
+      const message =
+        error instanceof Error
+          ? error.message
+          : "Não foi possível realizar o login.";
 
-      const credentialsInvalid = message === "E-mail ou senha inválidos.";
+      const credentialsInvalid =
+        message === "E-mail ou senha inválidos.";
+
+      const emailInvalid =
+        message === "E-mail institucional de socorrista inválido." ||
+        message === "E-mail institucional de regulador inválido." ||
+        message === "Este e-mail é reservado para contas institucionais.";
 
       setLoginError({
         message,
-        type: credentialsInvalid ? "credentials" : "general",
+        type: credentialsInvalid
+          ? "credentials"
+          : emailInvalid
+            ? "email"
+            : "general",
       });
     } finally {
       setLoading(false);
@@ -164,7 +192,9 @@ export default function FormLogin() {
                   name={passwordVisible ? "eye-slash" : "eye"}
                   size={22}
                   color={
-                    passwordHasError ? colors.inputBorderError : colors.icon
+                    passwordHasError
+                      ? colors.inputBorderError
+                      : colors.icon
                   }
                 />
               }
@@ -186,7 +216,11 @@ export default function FormLogin() {
           </View>
         </View>
 
-        <TextLink route="Login" text="Esqueci minha senha" textAlign="end" />
+        <TextLink
+          route="SendCodeToEmail"
+          text="Esqueci minha senha"
+          textAlign="end"
+        />
       </View>
 
       <View
@@ -249,7 +283,7 @@ export default function FormLogin() {
             Ainda não tem conta?
           </Text>
 
-          <TextLink text=" Criar conta" route="Login" />
+          <TextLink text=" Criar conta" route="CreateAccount" />
         </View>
       </View>
     </View>
