@@ -20,13 +20,15 @@ export const LIGHT_THEME: ThemeColorsType = {
   textButton: "#FFFFFF",
   textDisabled: "#FFFFFF30",
   icon: "#0E1630",
+  iconArrowLeft: "#0E1630",
+  label: "#0E1630"
 };
 
 export const DARK_THEME: ThemeColorsType = {
   background: "#0A0F24",
   surface: "#121A38",
   titleLogo: "#8EA6FF",
-  text: "#FFFFFF",
+  text: "#F2F5FF",
   textSecondary: "#B6C0DD",
   primary: "#8EA6FF",
   onPrimary: "#0D1228",
@@ -42,6 +44,8 @@ export const DARK_THEME: ThemeColorsType = {
   textButton: "#0A0F24",
   textDisabled: "#0A0F2430",
   icon: "#91A6FF",
+  iconArrowLeft: "#F2F5FF",
+  label: "#FFFFFF",
 };
 
 export const FONTS = {
