@@ -9,4 +9,5 @@ export interface InputFormType extends TextInputProps {
     fontSizeLabel?: number;
     color?: string;
     gap?: number;
+    width?: number;
 }
