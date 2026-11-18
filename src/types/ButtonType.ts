@@ -12,5 +12,7 @@ export interface ButtonType extends TouchableOpacityProps {
     iconRight?: React.ReactNode;
     iconLeft?: React.ReactNode;
     gap?: number;
+    borderWidth?: number;
+    borderColor?: string;
     text: string;
 }
