@@ -6,7 +6,7 @@ export const LIGHT_THEME: ThemeColorsType = {
   titleLogo: "#2F4BD0",
   text: "#0E1630",
   textSecondary: "#46526E",
-  primary: "#304CD7",
+  primary: "#2F4BD0",
   onPrimary: "#FFFFFF",
   inputBackground: "#FFFFFF",
   inputBorder: "#6C7AA6",
@@ -17,6 +17,7 @@ export const LIGHT_THEME: ThemeColorsType = {
   messageError: "#C62828",
   backgroundError: "#FDE7E7",
   buttonDisabled: "#2F4BD030",
+  textButton: "#FFFFFF",
   textDisabled: "#FFFFFF30",
   icon: "#0E1630",
 };
@@ -27,7 +28,7 @@ export const DARK_THEME: ThemeColorsType = {
   titleLogo: "#8EA6FF",
   text: "#FFFFFF",
   textSecondary: "#B6C0DD",
-  primary: "#91A6FF",
+  primary: "#8EA6FF",
   onPrimary: "#0D1228",
   inputBackground: "#0A0F24",
   inputBorder: "#6C7AA6",
@@ -38,6 +39,7 @@ export const DARK_THEME: ThemeColorsType = {
   messageError: "#FF8A82",
   backgroundError: "#3B1F2D",
   buttonDisabled: "#2F4BD030",
+  textButton: "#0A0F24",
   textDisabled: "#0A0F2430",
   icon: "#91A6FF",
 };
