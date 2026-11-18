@@ -11,7 +11,6 @@ import * as LocalAuthentication from "expo-local-authentication";
 import {
   loginWithEmail,
   getAuthenticatedUser,
-  getResponderProfile,
   type AuthUser,
 } from "../services/authService";
 
@@ -50,26 +49,6 @@ function getAuthorizedRole(user: AuthUser): AppRoleType {
     throw new Error("Perfil de acesso não disponível no aplicativo.");
   }
 
-  const domain = user.email.trim().toLowerCase().split("@")[1];
-
-  const responderDomain = "responderstormaid.com.br";
-  const regulatorDomain = "regulatorstormaid.com.br";
-
-  if (role === "RESPONDER" && domain !== responderDomain) {
-    throw new Error("E-mail institucional de socorrista inválido.");
-  }
-
-  if (role === "REGULATOR" && domain !== regulatorDomain) {
-    throw new Error("E-mail institucional de regulador inválido.");
-  }
-
-  if (
-    role === "CITIZEN" &&
-    (domain === responderDomain || domain === regulatorDomain)
-  ) {
-    throw new Error("Este e-mail é reservado para contas institucionais.");
-  }
-
   return role;
 }
 
@@ -81,14 +60,6 @@ async function validateAccess(accessToken: string): Promise<{
 
   const authorizedRole = getAuthorizedRole(authenticatedUser);
 
-  if (authorizedRole === "RESPONDER") {
-    const profile = await getResponderProfile(accessToken);
-
-    if (profile.verificationStatus !== "APPROVED") {
-      throw new Error("Sua conta de socorrista ainda não está aprovada.");
-    }
-  }
-
   return {
     user: authenticatedUser,
     role: authorizedRole,
@@ -97,12 +68,17 @@ async function validateAccess(accessToken: string): Promise<{
 
 async function checkBiometrics() {
   const available = await LocalAuthentication.hasHardwareAsync();
+
+  if (!available) {
+    throw new Error(
+      "Este dispositivo não possui sensor biométrico disponível.",
+    );
+  }
+
   const enrolled = await LocalAuthentication.isEnrolledAsync();
 
-  if (!available || !enrolled) {
-    throw new Error(
-      "Configure sua impressão digital nas configurações do dispositivo.",
-    );
+  if (!enrolled) {
+    throw new Error("Nenhuma impressão digital cadastrada no dispositivo.");
   }
 }
 
@@ -124,7 +100,9 @@ export function AuthProvider({ children }: PropsWithChildren) {
   }
 
   async function signIn(email: string, password: string) {
-    const response = await loginWithEmail(email.trim().toLowerCase(), password);
+    const normalizedEmail = email.trim().toLowerCase();
+
+    const response = await loginWithEmail(normalizedEmail, password);
 
     if (!response.accessToken) {
       throw new Error("A API não retornou um token de autenticação.");
