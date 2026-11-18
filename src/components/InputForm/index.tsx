@@ -12,6 +12,7 @@ export default function InputForm({
   fontSizeLabel,
   color,
   gap,
+  width,
   ...rest
 }: InputFormType) {
   const { colors } = useTheme();
@@ -39,6 +40,7 @@ export default function InputForm({
           error ? colors.inputBorderError : colors.placeholder
         }
         style={{
+          width: width,
           borderWidth: 1.5,
           borderColor: error ? colors.inputBorderError : colors.inputBorder,
           borderRadius: 12,
