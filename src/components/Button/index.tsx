@@ -15,6 +15,7 @@ export default function Button({
   iconRight,
   iconLeft,
   gap,
+  text,
   ...rest
 }: ButtonType) {
 
@@ -28,22 +29,24 @@ export default function Button({
         width: width || 300,
         backgroundColor: backgroundColor || colors.primary,
         borderRadius: borderRadius || 12,
-        gap: gap || 15
+        gap: gap || 15,
+        flexDirection: 'row',
+        alignItems: 'center',
+        justifyContent: 'center'
       }}
       {...rest}
-    >
+      >
+        {iconLeft}
       <Text
         style={{
-          textAlign: "center",
           color: colorText || colors.textButton,
           fontFamily: fontFamily || FONTS.inter[600],
           fontSize: fontSize || 22,
         }}
       >
-        {iconLeft}
-        Entrar
-        {iconRight}
+        {text}
       </Text>
+        {iconRight}
     </TouchableOpacity>
   );
 }
