@@ -6,7 +6,7 @@ import { FONTS } from "../../styles/style";
 export default function InputForm({
   label,
   placeholder,
-  error,
+  error = false,
   isIcon,
   onPress,
   ...rest
@@ -28,32 +28,40 @@ export default function InputForm({
       >
         {label}
       </Text>
+
       <TextInput
-        placeholder={placeholder}
-        placeholderTextColor={error ? colors.messageError : colors.placeholder}
         {...rest}
+        placeholder={placeholder}
+        placeholderTextColor={
+          error ? colors.inputBorderError : colors.placeholder
+        }
         style={{
           borderWidth: 1.5,
-          borderColor: colors.inputBorder,
+          borderColor: error ? colors.inputBorderError : colors.inputBorder,
           borderRadius: 12,
+          backgroundColor: colors.inputBackground,
           color: colors.text,
           padding: 15,
+          paddingRight: isIcon ? 48 : 15,
           fontFamily: FONTS.inter[500],
           fontSize: 16,
         }}
       />
 
-      <TouchableOpacity
-        onPress={onPress}
-        style={{
-          position: "absolute",
-          alignItems: "flex-end",
-          top: 50,
-          right: 15,
-        }}
-      >
-        {isIcon}
-      </TouchableOpacity>
+      {isIcon && (
+        <TouchableOpacity
+          onPress={onPress}
+          accessibilityRole="button"
+          style={{
+            position: "absolute",
+            alignItems: "flex-end",
+            top: 50,
+            right: 15,
+          }}
+        >
+          {isIcon}
+        </TouchableOpacity>
+      )}
     </View>
   );
 }
