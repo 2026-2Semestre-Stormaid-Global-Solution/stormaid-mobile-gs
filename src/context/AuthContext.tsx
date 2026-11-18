@@ -1,6 +1,20 @@
-import { createContext, useContext, useEffect, useState, type PropsWithChildren,} from "react";
+import {
+  createContext,
+  useContext,
+  useState,
+  type PropsWithChildren,
+} from "react";
+
 import * as SecureStore from "expo-secure-store";
-import { loginWithEmail, getAuthenticatedUser, getResponderProfile, type AuthUser,} from "../services/authService";
+import * as LocalAuthentication from "expo-local-authentication";
+
+import {
+  loginWithEmail,
+  getAuthenticatedUser,
+  getResponderProfile,
+  type AuthUser,
+} from "../services/authService";
+
 import { AppRoleType } from "../types/AppRoleType";
 
 type AuthContextType = {
@@ -11,10 +25,13 @@ type AuthContextType = {
   isLoading: boolean;
   saveToken: (token: string) => Promise<void>;
   signIn: (email: string, password: string) => Promise<void>;
+  signInWithBiometrics: () => Promise<void>;
+  enableBiometrics: () => Promise<void>;
+  lockSession: () => void;
   signOut: () => Promise<void>;
 };
 
-const TOKEN_KEY = "stormaid_access_token";
+const BIOMETRIC_KEY = "stormaid_biometric_token";
 
 const AuthContext = createContext<AuthContextType | undefined>(undefined);
 
@@ -46,7 +63,10 @@ function getAuthorizedRole(user: AuthUser): AppRoleType {
     throw new Error("E-mail institucional de regulador inválido.");
   }
 
-  if ( role === "CITIZEN" && (domain === responderDomain || domain === regulatorDomain)) {
+  if (
+    role === "CITIZEN" &&
+    (domain === responderDomain || domain === regulatorDomain)
+  ) {
     throw new Error("Este e-mail é reservado para contas institucionais.");
   }
 
@@ -75,57 +95,28 @@ async function validateAccess(accessToken: string): Promise<{
   };
 }
 
+async function checkBiometrics() {
+  const available = await LocalAuthentication.hasHardwareAsync();
+  const enrolled = await LocalAuthentication.isEnrolledAsync();
+
+  if (!available || !enrolled) {
+    throw new Error(
+      "Configure sua impressão digital nas configurações do dispositivo.",
+    );
+  }
+}
+
 export function AuthProvider({ children }: PropsWithChildren) {
   const [token, setToken] = useState<string | null>(null);
   const [user, setUser] = useState<AuthUser | null>(null);
   const [role, setRole] = useState<AppRoleType | null>(null);
-  const [isLoading, setIsLoading] = useState(true);
-
-  useEffect(() => {
-    let isMounted = true;
-
-    async function restoreToken() {
-      try {
-        const storedToken = await SecureStore.getItemAsync(TOKEN_KEY);
-
-        if (!storedToken) {
-          return;
-        }
-
-        const session = await validateAccess(storedToken);
-
-        if (isMounted) {
-          setToken(storedToken);
-          setUser(session.user);
-          setRole(session.role);
-        }
-      } catch {
-        if (isMounted) {
-          setToken(null);
-          setUser(null);
-          setRole(null);
-        }
-      } finally {
-        if (isMounted) {
-          setIsLoading(false);
-        }
-      }
-    }
-
-    restoreToken();
-
-    return () => {
-      isMounted = false;
-    };
-  }, []);
 
   async function saveToken(accessToken: string) {
     if (!accessToken.trim()) {
       throw new Error("Token de autenticação inválido.");
     }
-    const session = await validateAccess(accessToken);
 
-    await SecureStore.setItemAsync(TOKEN_KEY, accessToken);
+    const session = await validateAccess(accessToken);
 
     setToken(accessToken);
     setUser(session.user);
@@ -133,9 +124,7 @@ export function AuthProvider({ children }: PropsWithChildren) {
   }
 
   async function signIn(email: string, password: string) {
-    const normalizedEmail = email.trim().toLowerCase();
-
-    const response = await loginWithEmail(normalizedEmail, password);
+    const response = await loginWithEmail(email.trim().toLowerCase(), password);
 
     if (!response.accessToken) {
       throw new Error("A API não retornou um token de autenticação.");
@@ -144,12 +133,46 @@ export function AuthProvider({ children }: PropsWithChildren) {
     await saveToken(response.accessToken);
   }
 
-  async function signOut() {
-    await SecureStore.deleteItemAsync(TOKEN_KEY);
+  async function enableBiometrics() {
+    if (!token) {
+      throw new Error("Entre com e-mail e senha para ativar a biometria.");
+    }
 
+    await checkBiometrics();
+
+    await SecureStore.setItemAsync(BIOMETRIC_KEY, token, {
+      requireAuthentication: true,
+      authenticationPrompt: "Ativar biometria do Storm Aid",
+    });
+  }
+
+  async function signInWithBiometrics() {
+    await checkBiometrics();
+
+    const storedToken = await SecureStore.getItemAsync(BIOMETRIC_KEY, {
+      requireAuthentication: true,
+      authenticationPrompt: "Entrar no Storm Aid",
+    });
+
+    if (!storedToken) {
+      throw new Error(
+        "Biometria não ativada. Entre com e-mail e senha primeiro.",
+      );
+    }
+
+    await saveToken(storedToken);
+  }
+
+  function lockSession() {
     setToken(null);
     setUser(null);
     setRole(null);
+  }
+
+  async function signOut() {
+    await SecureStore.deleteItemAsync("stormaid_access_token");
+
+    lockSession();
   }
 
   return (
@@ -159,9 +182,12 @@ export function AuthProvider({ children }: PropsWithChildren) {
         user,
         role,
         hasToken: !!token,
-        isLoading,
+        isLoading: false,
         saveToken,
         signIn,
+        signInWithBiometrics,
+        enableBiometrics,
+        lockSession,
         signOut,
       }}
     >
