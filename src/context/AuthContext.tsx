@@ -1,12 +1,13 @@
 import { createContext, useContext, useEffect, useState, type PropsWithChildren,} from "react";
-
 import * as SecureStore from "expo-secure-store";
+import { loginWithEmail } from "../services/authService";
 
 type AuthContextType = {
   token: string | null;
   hasToken: boolean;
   isLoading: boolean;
   saveToken: (token: string) => Promise<void>;
+  signIn: (email: string, password: string) => Promise<void>;
   signOut: () => Promise<void>;
 };
 
@@ -56,6 +57,21 @@ export function AuthProvider({ children }: PropsWithChildren) {
     setToken(accessToken);
   }
 
+  async function signIn(email: string, password: string) {
+    const normalizedEmail = email.trim().toLowerCase();
+
+    const response = await loginWithEmail(
+      normalizedEmail,
+      password
+    );
+
+    if (!response.accessToken) {
+      throw new Error("A API não retornou um token de autenticação.");
+    }
+
+    await saveToken(response.accessToken);
+  }
+
   async function signOut() {
     await SecureStore.deleteItemAsync(TOKEN_KEY);
 
@@ -69,6 +85,7 @@ export function AuthProvider({ children }: PropsWithChildren) {
         hasToken: !!token,
         isLoading,
         saveToken,
+        signIn,
         signOut,
       }}
     >
