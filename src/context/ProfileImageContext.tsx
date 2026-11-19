@@ -6,57 +6,102 @@ import {
   type PropsWithChildren,
 } from "react";
 
+import * as SecureStore from "expo-secure-store";
 import { useAuth } from "./AuthContext";
 
 type ProfileImageContextType = {
   photoUrl: string | null;
-  setPhotoUrl: (url: string | null) => void;
+  setPhotoUrl: (url: string | null) => Promise<void>;
+  isPhotoLoading: boolean;
 };
 
-type PhotoState = {
+type StoredPhoto = {
   userId: number;
   url: string | null;
 };
 
-const ProfileImageContext = createContext<
-  ProfileImageContextType | undefined
->(undefined);
+const ProfileImageContext = createContext<ProfileImageContextType | undefined>(
+  undefined,
+);
 
-export function ProfileImageProvider({
-  children,
-}: PropsWithChildren) {
+function getPhotoKey(userId: number) {
+  return `stormaid_profile_photo_${userId}`;
+}
+
+export function ProfileImageProvider({ children }: PropsWithChildren) {
   const { user } = useAuth();
 
-  const [localPhoto, setLocalPhoto] =
-    useState<PhotoState | null>(null);
+  const [storedPhoto, setStoredPhoto] = useState<StoredPhoto | null>(null);
 
-  // Evita manter o estado local da foto ao trocar de conta.
+  const [isPhotoLoading, setIsPhotoLoading] = useState(false);
+
   useEffect(() => {
-    setLocalPhoto(null);
-  }, [user?.id]);
+    let active = true;
 
-  // Prioriza a foto atualizada durante a sessão.
-  // Caso contrário, utiliza a URL recebida da API.
-  const photoUrl = user
-    ? localPhoto?.userId === user.id
-      ? localPhoto.url
-      : user.photoUrl ?? null
-    : null;
+    setStoredPhoto(null);
 
-  function setPhotoUrl(url: string | null) {
     if (!user) {
+      setIsPhotoLoading(false);
       return;
     }
 
-    setLocalPhoto({
-      userId: user.id,
-      url: url?.trim() || null,
+    const userId = user.id;
+    setIsPhotoLoading(true);
+
+    async function loadPhoto() {
+      try {
+        const url = await SecureStore.getItemAsync(getPhotoKey(userId));
+
+        if (active) {
+          setStoredPhoto({ userId, url });
+        }
+      } catch (error) {
+        console.warn("Erro ao recuperar foto:", error);
+      } finally {
+        if (active) {
+          setIsPhotoLoading(false);
+        }
+      }
+    }
+
+    loadPhoto();
+
+    return () => {
+      active = false;
+    };
+  }, [user?.id]);
+
+  const photoUrl =
+    user && storedPhoto?.userId === user.id ? storedPhoto.url : null;
+
+  async function setPhotoUrl(url: string | null) {
+    if (!user) {
+      throw new Error("Usuário não autenticado.");
+    }
+
+    const userId = user.id;
+    const normalizedUrl = url?.trim() || null;
+    const key = getPhotoKey(userId);
+
+    if (normalizedUrl) {
+      await SecureStore.setItemAsync(key, normalizedUrl);
+    } else {
+      await SecureStore.deleteItemAsync(key);
+    }
+
+    setStoredPhoto({
+      userId,
+      url: normalizedUrl,
     });
   }
 
   return (
     <ProfileImageContext.Provider
-      value={{ photoUrl, setPhotoUrl }}
+      value={{
+        photoUrl,
+        setPhotoUrl,
+        isPhotoLoading,
+      }}
     >
       {children}
     </ProfileImageContext.Provider>
@@ -68,7 +113,7 @@ export function useProfileImage() {
 
   if (!context) {
     throw new Error(
-      "useProfileImage deve ser utilizado dentro do ProfileImageProvider"
+      "useProfileImage deve ser usado dentro do ProfileImageProvider.",
     );
   }
 
