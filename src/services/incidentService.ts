@@ -1,6 +1,24 @@
-import type { IncidentResponseType } from "../types/IncidentType";
+import type {
+  EmergencyCategory,
+  IncidentResponseType,
+} from "../types/IncidentType";
 
 const API_URL = process.env.EXPO_PUBLIC_API_URL?.replace(/\/$/, "");
+
+export type IncidentCreateRequestType = {
+  recipientType: "SELF";
+  requesterOnSite: boolean;
+  channelType: "TEXT_INPUT";
+  emergencyCategory: EmergencyCategory;
+  textDescription: string;
+  location: {
+    source: "CURRENT_LOCATION";
+    latitude: number;
+    longitude: number;
+    accuracyMeters?: number | null;
+    locationCapturedAt: string;
+  };
+};
 
 export type IncidentPageResponseType = {
   content: IncidentResponseType[];
@@ -109,4 +127,71 @@ export async function listMyIncidents(
   }
 
   return data;
+}
+
+export async function createIncident(
+  token: string,
+  payload: IncidentCreateRequestType,
+  idempotencyKey: string,
+): Promise<IncidentResponseType> {
+  const authorization = getAuthorizationHeader(token);
+  const apiUrl = getApiUrl();
+
+  const key = idempotencyKey.trim();
+
+  if (key.length === 0 || key.length > 100 || key.startsWith("auto-")) {
+    throw new Error("Identificador da solicitação inválido.");
+  }
+
+  if (!payload.textDescription.trim()) {
+    throw new Error("Informe a descrição da emergência.");
+  }
+
+  const { latitude, longitude } = payload.location;
+
+  if (
+    !Number.isFinite(latitude) ||
+    !Number.isFinite(longitude) ||
+    latitude < -90 ||
+    latitude > 90 ||
+    longitude < -180 ||
+    longitude > 180
+  ) {
+    throw new Error("Localização inválida para o chamado.");
+  }
+
+  let response: Response;
+
+  try {
+    response = await fetch(`${apiUrl}/api/v1/incidents`, {
+      method: "POST",
+      headers: {
+        Accept: "application/json",
+        "Content-Type": "application/json",
+        Authorization: authorization,
+        "Idempotency-Key": key,
+      },
+      body: JSON.stringify(payload),
+    });
+  } catch {
+    throw new Error("Não foi possível conectar à API. Verifique sua conexão.");
+  }
+
+  if (!response.ok) {
+    await handleApiError(response);
+  }
+
+  let createdIncident: IncidentResponseType;
+
+  try {
+    createdIncident = (await response.json()) as IncidentResponseType;
+  } catch {
+    throw new Error("A API retornou uma resposta inválida ao criar o chamado.");
+  }
+
+  if (!createdIncident || typeof createdIncident.id !== "number") {
+    throw new Error("Não foi possível confirmar o registro do chamado.");
+  }
+
+  return createdIncident;
 }
