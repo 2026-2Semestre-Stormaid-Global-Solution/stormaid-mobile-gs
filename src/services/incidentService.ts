@@ -5,20 +5,33 @@ import type {
 
 const API_URL = process.env.EXPO_PUBLIC_API_URL?.replace(/\/$/, "");
 
-export type IncidentCreateRequestType = {
+type IncidentLocationRequestType = {
+  source: "CURRENT_LOCATION";
+  latitude: number;
+  longitude: number;
+  accuracyMeters?: number | null;
+  locationCapturedAt: string;
+};
+
+type BaseIncidentCreateRequestType = {
   recipientType: "SELF";
   requesterOnSite: boolean;
-  channelType: "TEXT_INPUT";
-  emergencyCategory: EmergencyCategory;
-  textDescription: string;
-  location: {
-    source: "CURRENT_LOCATION";
-    latitude: number;
-    longitude: number;
-    accuracyMeters?: number | null;
-    locationCapturedAt: string;
-  };
+  location: IncidentLocationRequestType;
 };
+
+export type IncidentCreateRequestType = BaseIncidentCreateRequestType &
+  (
+    | {
+        channelType: "TEXT_INPUT";
+        emergencyCategory: EmergencyCategory;
+        textDescription: string;
+      }
+    | {
+        channelType: "SOS_SILENT";
+        emergencyCategory: "UNKNOWN_EMERGENCY";
+        textDescription?: never;
+      }
+  );
 
 export type IncidentPageResponseType = {
   content: IncidentResponseType[];
@@ -143,7 +156,7 @@ export async function createIncident(
     throw new Error("Identificador da solicitação inválido.");
   }
 
-  if (!payload.textDescription.trim()) {
+  if (payload.channelType === "TEXT_INPUT" && !payload.textDescription.trim()) {
     throw new Error("Informe a descrição da emergência.");
   }
 
@@ -160,6 +173,23 @@ export async function createIncident(
     throw new Error("Localização inválida para o chamado.");
   }
 
+  const accuracy = payload.location.accuracyMeters;
+
+  const normalizedPayload: IncidentCreateRequestType = {
+    ...payload,
+    location: {
+      ...payload.location,
+      latitude: Number(latitude.toFixed(7)),
+      longitude: Number(longitude.toFixed(7)),
+      accuracyMeters:
+        typeof accuracy === "number" &&
+        Number.isFinite(accuracy) &&
+        accuracy >= 0
+          ? Number(accuracy.toFixed(2))
+          : null,
+    },
+  };
+
   let response: Response;
 
   try {
@@ -171,7 +201,7 @@ export async function createIncident(
         Authorization: authorization,
         "Idempotency-Key": key,
       },
-      body: JSON.stringify(payload),
+      body: JSON.stringify(normalizedPayload),
     });
   } catch {
     throw new Error("Não foi possível conectar à API. Verifique sua conexão.");
