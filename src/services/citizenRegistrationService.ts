@@ -98,11 +98,23 @@ export async function registerFullCitizen(): Promise<LoginResponse> {
     }
   );
 
-  if (response.status === 409) {
-    throw new Error(
-      "Este e-mail já está cadastrado. Volte ao primeiro formulário e corrija o e-mail."
-    );
+if (response.status === 409) {
+  const error = (await response.json().catch(() => ({}))) as {
+    message?: string;
+  };
+
+  const message = error.message?.toLowerCase() ?? "";
+
+  if (message.includes("cpf")) {
+    throw new Error("Este CPF já está cadastrado.");
   }
+
+  if (message.includes("email") || message.includes("e-mail")) {
+    throw new Error("Este e-mail já está cadastrado.");
+  }
+
+  throw new Error("Já existe um cadastro com esses dados.");
+}
 
   if (response.status === 400) {
     throw new Error(
