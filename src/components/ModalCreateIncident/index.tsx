@@ -108,6 +108,11 @@ export default function ModalCreateIncident({
         emergencyCategory: category,
         textDescription: description.trim(),
       });
+
+      setCategory(null);
+      setDescription("");
+      setAttempted(false);
+      setSubmitError(null);
     } catch (err) {
       setSubmitError(
         err instanceof Error
