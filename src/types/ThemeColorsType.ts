@@ -20,4 +20,6 @@ export type ThemeColorsType = {
   icon: string;
   iconArrowLeft: string;
   label: string;
+  cardActive: string;
+  borderNotActive: string;
 };
