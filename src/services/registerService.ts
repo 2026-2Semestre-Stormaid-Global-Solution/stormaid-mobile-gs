@@ -2,6 +2,7 @@ import * as SecureStore from "expo-secure-store";
 import { RegisterRequestType, RegisterResponseType, RegisterResultType} from "../types/RegisterRequestType";
 import { AddressDataType } from "../types/AddressDataType";
 import { AccessibilityDataType } from "../types/AccessibilityDataType";
+import type { ParentsDataType } from "../types/ParentsDataType";
 
 const API_URL = process.env.EXPO_PUBLIC_API_URL;
 const REGISTER_DRAFT_KEY = "stormaid_registration_draft_v1";
@@ -160,4 +161,50 @@ export async function getAccessibilityData():
   const draft = JSON.parse(storedData);
 
   return draft.vulnerability ?? null;
+}
+
+export async function saveParentsData(
+  data: ParentsDataType
+): Promise<void> {
+  const storedData = await SecureStore.getItemAsync(
+    REGISTER_DRAFT_KEY
+  );
+
+  if (!storedData) {
+    throw new Error(
+      "Preencha os formulários anteriores antes de continuar."
+    );
+  }
+
+  const draft = JSON.parse(storedData);
+
+  await SecureStore.setItemAsync(
+    REGISTER_DRAFT_KEY,
+    JSON.stringify({
+      ...draft,
+      noEmergencyContact: data.noEmergencyContact,
+      emergencyContact: data.emergencyContact,
+    })
+  );
+}
+
+export async function getParentsData(): Promise<ParentsDataType | null> {
+  const storedData = await SecureStore.getItemAsync(
+    REGISTER_DRAFT_KEY
+  );
+
+  if (!storedData) {
+    return null;
+  }
+
+  const draft = JSON.parse(storedData);
+
+  if (!Object.prototype.hasOwnProperty.call(draft, "noEmergencyContact")) {
+    return null;
+  }
+
+  return {
+    noEmergencyContact: draft.noEmergencyContact === true,
+    emergencyContact: draft.emergencyContact ?? null,
+  };
 }
