@@ -2,6 +2,8 @@ export type RegisterRequestType = {
   fullName: string;
   email: string;
   phoneNumber: string;
+  cpf: string;
+  birthDate: string;
   password: string;
 };
 
