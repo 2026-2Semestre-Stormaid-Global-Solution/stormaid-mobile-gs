@@ -1,4 +1,4 @@
-import { Text, View } from "react-native";
+import { Pressable, Text, View } from "react-native";
 import Ionicons from "@expo/vector-icons/Ionicons";
 import { useTheme } from "../../context/ThemeContext";
 import { FONTS } from "../../styles/style";
@@ -7,17 +7,26 @@ type CardWeatherAlertProps = {
   title: string;
   description: string;
   loading?: boolean;
+  error?: boolean;
+  onPress?: () => void;
 };
 
 export default function CardWeatherAlert({
   title,
   description,
   loading = false,
+  error = false,
+  onPress,
 }: CardWeatherAlertProps) {
   const { colors } = useTheme();
 
   return (
-    <View
+    <Pressable
+      onPress={onPress}
+      disabled={loading || !onPress}
+      accessibilityRole="button"
+      accessibilityLabel="Consultar condições meteorológicas"
+      accessibilityState={{ disabled: loading || !onPress }}
       style={{
         marginHorizontal: 17,
         marginTop: -29,
@@ -25,7 +34,9 @@ export default function CardWeatherAlert({
         borderRadius: 17,
         padding: 16,
         borderWidth: 1,
-        borderColor: colors.inputBorder + "45",
+        borderColor: error
+          ? colors.inputBorderError
+          : colors.inputBorder + "45",
         flexDirection: "row",
         alignItems: "center",
         gap: 12,
@@ -37,12 +48,16 @@ export default function CardWeatherAlert({
           width: 46,
           height: 46,
           borderRadius: 14,
-          backgroundColor: colors.cardActive,
+          backgroundColor: error ? colors.backgroundError : colors.cardActive,
           alignItems: "center",
           justifyContent: "center",
         }}
       >
-        <Ionicons name="cloud-outline" size={25} color={colors.link} />
+        <Ionicons
+          name={error ? "alert-circle-outline" : "cloud-outline"}
+          size={25}
+          color={error ? colors.messageError : colors.link}
+        />
       </View>
 
       <View style={{ flex: 1 }}>
@@ -59,15 +74,21 @@ export default function CardWeatherAlert({
         <Text
           style={{
             fontFamily: FONTS.inter[400],
-            color: colors.textSecondary,
+            color: error ? colors.messageError : colors.textSecondary,
             fontSize: 11,
             lineHeight: 17,
             marginTop: 4,
           }}
         >
-          {loading ? "Carregando informações meteorológicas..." : description}
+          {loading ? "Consultando condições meteorológicas..." : description}
         </Text>
       </View>
-    </View>
+
+      <Ionicons
+        name={loading ? "hourglass-outline" : "chevron-forward-outline"}
+        size={17}
+        color={colors.textSecondary}
+      />
+    </Pressable>
   );
 }
