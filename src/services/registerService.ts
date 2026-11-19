@@ -10,12 +10,21 @@ const REGISTER_DRAFT_KEY = "stormaid_registration_draft_v1";
 export async function saveAccountData(
   data: RegisterRequestType
 ): Promise<void> {
+  const storedData = await SecureStore.getItemAsync(
+    REGISTER_DRAFT_KEY
+  );
+
+  const draft = storedData ? JSON.parse(storedData) : {};
+
   await SecureStore.setItemAsync(
     REGISTER_DRAFT_KEY,
     JSON.stringify({
+      ...draft,
       fullName: data.fullName.trim(),
       email: data.email.trim().toLowerCase(),
       phoneNumber: data.phoneNumber,
+      cpf: data.cpf.replace(/\D/g, ""),
+      birthDate: data.birthDate,
       password: data.password,
     })
   );
