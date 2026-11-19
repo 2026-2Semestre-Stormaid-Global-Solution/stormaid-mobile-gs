@@ -20,13 +20,17 @@ export const LIGHT_THEME: ThemeColorsType = {
   textButton: "#FFFFFF",
   textDisabled: "#FFFFFF30",
   icon: "#0E1630",
+  iconArrowLeft: "#0E1630",
+  label: "#0E1630",
+  cardActive: "#E1E8FF",
+  borderNotActive: "#6B789A",
 };
 
 export const DARK_THEME: ThemeColorsType = {
   background: "#0A0F24",
   surface: "#121A38",
   titleLogo: "#8EA6FF",
-  text: "#FFFFFF",
+  text: "#F2F5FF",
   textSecondary: "#B6C0DD",
   primary: "#8EA6FF",
   onPrimary: "#0D1228",
@@ -42,6 +46,10 @@ export const DARK_THEME: ThemeColorsType = {
   textButton: "#0A0F24",
   textDisabled: "#0A0F2430",
   icon: "#91A6FF",
+  iconArrowLeft: "#F2F5FF",
+  label: "#FFFFFF",
+  cardActive: "#8EA6FF",
+  borderNotActive: "#F2F5FF",
 };
 
 export const FONTS = {
@@ -50,5 +58,12 @@ export const FONTS = {
         500: "Inter-Medium",
         600: "Inter-SemiBold",
         700: "Inter-Bold",
+    },
+
+    sora: {
+        400: "Sora-Regular",
+        500: "Sora-Medium",
+        600: "Sora-SemiBold",
+        700: "Sora-Bold",
     },
 }

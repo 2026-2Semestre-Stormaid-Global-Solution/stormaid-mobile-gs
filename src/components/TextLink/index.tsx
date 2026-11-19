@@ -16,6 +16,9 @@ export default function TextLink({
   fontFamily,
   fontSize,
   textAlign,
+  iconLeft,
+  iconRight,
+  alignItems
 }: TextLinkType) {
   const navigation = useNavigation<NativeStackNavigationProp<RootStackParamListType>>();
   const { colors } = useTheme();
@@ -28,8 +31,11 @@ export default function TextLink({
         marginBottom: marginBottom,
         marginLeft: marginLeft,
         marginRight: marginRight,
+        alignItems: alignItems || 'center',
+        gap: 10
       }}
     >
+      {iconLeft}
       <Text
         style={{
           color: colors.link,
@@ -40,6 +46,7 @@ export default function TextLink({
       >
         {text}
       </Text>
+      {iconRight}
     </TouchableOpacity>
   );
 }
