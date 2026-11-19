@@ -191,7 +191,7 @@ export default function FormParents({ onContinue }: FormParentsType) {
         });
       }
 
-      onContinue?.();
+      await onContinue?.();
     } catch (error) {
       setSaveError(
         error instanceof Error
@@ -490,7 +490,7 @@ export default function FormParents({ onContinue }: FormParentsType) {
         <Button
           onPress={handleContinue}
           disabled={buttonDisabled}
-          text={saving ? "Salvando..." : "Continuar"}
+          text={saving ? "Criando conta..." : "Criar conta"}
           backgroundColor={
             buttonDisabled ? colors.buttonDisabled : colors.primary
           }
