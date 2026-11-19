@@ -8,7 +8,13 @@ import InputForm from "../InputForm";
 import Button from "../Button";
 import SubTitle from "../SubTitle";
 import { FormAccountDataType } from "../../types/FormAccountDataType";
-import {getAccountData, saveAccountData,} from "../../services/registerService";
+import { getAccountData, saveAccountData } from "../../services/registerService";
+import {
+  formatCpf,
+  formatBirthDate,
+  isValidCpf,
+  toIsoBirthDate,
+} from "../../utils/citizenValidation";
 
 function formatPhone(value: string): string {
   const digits = value.replace(/\D/g, "").slice(0, 11);
@@ -60,6 +66,35 @@ function validateEmail(value: string): string | null {
   return null;
 }
 
+function toDisplayBirthDate(value: string): string {
+  const match = /^(\d{4})-(\d{2})-(\d{2})$/.exec(value);
+  return match ? `${match[3]}/${match[2]}/${match[1]}` : formatBirthDate(value);
+}
+
+function validateCpf(value: string): string | null {
+  if (!value.trim()) {
+    return "Informe seu CPF.";
+  }
+
+  if (!isValidCpf(value)) {
+    return "Informe um CPF válido.";
+  }
+
+  return null;
+}
+
+function validateBirthDate(value: string): string | null {
+  if (!value.trim()) {
+    return "Informe sua data de nascimento.";
+  }
+
+  if (!toIsoBirthDate(value)) {
+    return "Informe uma data de nascimento válida.";
+  }
+
+  return null;
+}
+
 function validatePhone(value: string): string | null {
   const digits = value.replace(/\D/g, "");
 
@@ -105,6 +140,8 @@ export default function FormAccountData({ onContinue }: FormAccountDataType) {
   const { colors } = useTheme();
   const [fullName, setFullName] = useState("");
   const [email, setEmail] = useState("");
+  const [cpf, setCpf] = useState("");
+  const [birthDate, setBirthDate] = useState("");
   const [phoneNumber, setPhoneNumber] = useState("");
   const [password, setPassword] = useState("");
   const [confirmPassword, setConfirmPassword] = useState("");
@@ -125,6 +162,8 @@ export default function FormAccountData({ onContinue }: FormAccountDataType) {
         if (isMounted && storedData) {
           setFullName(storedData.fullName);
           setEmail(storedData.email);
+          setCpf(formatCpf(storedData.cpf ?? ""));
+          setBirthDate(toDisplayBirthDate(storedData.birthDate ?? ""));
           setPhoneNumber(storedData.phoneNumber);
           setPassword(storedData.password);
         }
@@ -148,6 +187,8 @@ export default function FormAccountData({ onContinue }: FormAccountDataType) {
 
   const fullNameErrorMessage = validationAttempted ? validateFullName(fullName) : null;
   const emailErrorMessage = validationAttempted ? validateEmail(email) : null;
+  const cpfErrorMessage = validationAttempted ? validateCpf(cpf) : null;
+  const birthDateErrorMessage = validationAttempted ? validateBirthDate(birthDate) : null;
   const phoneErrorMessage = validationAttempted ? validatePhone(phoneNumber) : null;
   const passwordErrorMessage = validationAttempted ? validatePassword(password) : null;
   const confirmPasswordErrorMessage = validationAttempted ? validateConfirmPassword(password, confirmPassword) : null;
@@ -155,6 +196,8 @@ export default function FormAccountData({ onContinue }: FormAccountDataType) {
   const hasErrors =
     !!fullNameErrorMessage ||
     !!emailErrorMessage ||
+    !!cpfErrorMessage ||
+    !!birthDateErrorMessage ||
     !!phoneErrorMessage ||
     !!passwordErrorMessage ||
     !!confirmPasswordErrorMessage;
@@ -173,11 +216,19 @@ export default function FormAccountData({ onContinue }: FormAccountDataType) {
     const invalid =
       validateFullName(fullName) ||
       validateEmail(email) ||
+      validateCpf(cpf) ||
+      validateBirthDate(birthDate) ||
       validatePhone(phoneNumber) ||
       validatePassword(password) ||
       validateConfirmPassword(password, confirmPassword);
 
     if (invalid) {
+      return;
+    }
+
+    const isoBirthDate = toIsoBirthDate(birthDate);
+
+    if (!isoBirthDate) {
       return;
     }
 
@@ -187,6 +238,8 @@ export default function FormAccountData({ onContinue }: FormAccountDataType) {
       await saveAccountData({
         fullName: fullName.trim(),
         email: email.trim().toLowerCase(),
+        cpf: cpf.replace(/\D/g, ""),
+        birthDate: isoBirthDate,
         phoneNumber,
         password,
       });
@@ -273,6 +326,68 @@ export default function FormAccountData({ onContinue }: FormAccountDataType) {
               }}
             >
               {emailErrorMessage}
+            </Text>
+          )}
+        </View>
+
+        <View
+          style={{
+            gap: 5,
+          }}
+        >
+          <InputForm
+            label="CPF"
+            placeholder="000.000.000-00"
+            fontSizeLabel={17}
+            keyboardType="number-pad"
+            maxLength={14}
+            value={cpf}
+            onChangeText={(value) => setCpf(formatCpf(value))}
+            error={!!cpfErrorMessage}
+            editable={!restoring && !saving}
+          />
+
+          {cpfErrorMessage && (
+            <Text
+              accessibilityRole="alert"
+              style={{
+                color: colors.messageError,
+                fontFamily: FONTS.inter[500],
+                fontSize: 13,
+              }}
+            >
+              {cpfErrorMessage}
+            </Text>
+          )}
+        </View>
+
+        <View
+          style={{
+            gap: 5,
+          }}
+        >
+          <InputForm
+            label="Data de nascimento"
+            placeholder="DD/MM/AAAA"
+            fontSizeLabel={17}
+            keyboardType="number-pad"
+            maxLength={10}
+            value={birthDate}
+            onChangeText={(value) => setBirthDate(formatBirthDate(value))}
+            error={!!birthDateErrorMessage}
+            editable={!restoring && !saving}
+          />
+
+          {birthDateErrorMessage && (
+            <Text
+              accessibilityRole="alert"
+              style={{
+                color: colors.messageError,
+                fontFamily: FONTS.inter[500],
+                fontSize: 13,
+              }}
+            >
+              {birthDateErrorMessage}
             </Text>
           )}
         </View>
