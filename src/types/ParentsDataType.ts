@@ -1,4 +1,4 @@
-import type { RelationshipType } from "../data/relationshipOptions";
+import type { RelationshipType } from "../data/relationshipOptionsData";
 
 export type ParentsDataType = {
   noEmergencyContact: boolean;
@@ -10,5 +10,5 @@ export type ParentsDataType = {
 };
 
 export type FormParentsType = {
-  onContinue?: () => void;
+  onContinue?: () => void | Promise<void>;
 };
