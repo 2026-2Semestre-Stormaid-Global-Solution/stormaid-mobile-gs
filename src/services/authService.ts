@@ -5,6 +5,7 @@ export type AuthUser = {
   phoneNumber?: string;
   roles: string[];
   status: string;
+  photoUrl?: string | null;
 };
 
 export type LoginResponse = {
