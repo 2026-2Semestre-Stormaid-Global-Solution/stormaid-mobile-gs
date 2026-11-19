@@ -21,7 +21,9 @@ export const LIGHT_THEME: ThemeColorsType = {
   textDisabled: "#FFFFFF30",
   icon: "#0E1630",
   iconArrowLeft: "#0E1630",
-  label: "#0E1630"
+  label: "#0E1630",
+  cardActive: "#E1E8FF",
+  borderNotActive: "#6B789A",
 };
 
 export const DARK_THEME: ThemeColorsType = {
@@ -46,6 +48,8 @@ export const DARK_THEME: ThemeColorsType = {
   icon: "#91A6FF",
   iconArrowLeft: "#F2F5FF",
   label: "#FFFFFF",
+  cardActive: "#8EA6FF",
+  borderNotActive: "#F2F5FF",
 };
 
 export const FONTS = {
