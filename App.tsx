@@ -2,6 +2,7 @@ import { NavigationContainer } from "@react-navigation/native";
 import { QueryClientProvider } from "@tanstack/react-query";
 import { SafeAreaProvider } from "react-native-safe-area-context";
 import { useFonts } from "expo-font";
+import { ProfileImageProvider } from "./src/context/ProfileImageContext";
 import {
   Inter_400Regular,
   Inter_500Medium,
@@ -41,9 +42,11 @@ export default function App() {
       <QueryClientProvider client={queryClient}>
         <ThemeProvider>
           <AuthProvider>
-            <NavigationContainer>
-              <AppNavigator />
-            </NavigationContainer>
+            <ProfileImageProvider>
+              <NavigationContainer>
+                  <AppNavigator />
+              </NavigationContainer>
+            </ProfileImageProvider>
           </AuthProvider>
         </ThemeProvider>
       </QueryClientProvider>
