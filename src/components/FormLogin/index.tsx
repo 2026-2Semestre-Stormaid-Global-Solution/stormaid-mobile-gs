@@ -239,12 +239,6 @@ export default function FormLogin() {
             )}
           </View>
         </View>
-
-        <TextLink
-          route="SendCodeToEmail"
-          text="Esqueci minha senha"
-          alignItems="flex-end"
-        />
       </View>
 
       <View
